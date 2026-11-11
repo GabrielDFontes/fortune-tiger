@@ -1,0 +1,699 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fortune Tiger - Simulador Educativo</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+ margin:0;
+ min-height:100vh;
+ background:#210505;
+ color:#fff;
+ font-family:Arial,sans-serif;
+ display:flex;
+ justify-content:center;
+ padding:14px;
+}
+
+.wrap{width:min(100%,420px)}
+
+.notice{
+ background:#fff0c7;
+ color:#64100b;
+ text-align:center;
+ padding:8px 5px;
+ border-radius:7px;
+ font-size:11px;
+ font-weight:800;
+ margin-bottom:9px;
+}
+
+.stage{
+ position:relative;
+ width:100%;
+ aspect-ratio:420/735;
+ background:url("assets/moldura-referencia.jpg") center/100% 100% no-repeat;
+ overflow:hidden;
+ box-shadow:0 10px 35px #0009;
+ border:1px solid #d5a74c;
+}
+
+.reels-cover{
+ position:absolute;
+ left:6.2%;
+ top:21.1%;
+ width:87.6%;
+ height:47.2%;
+ background:#d8b99d;
+ border:4px solid #d5a54c;
+ box-shadow:inset 0 0 0 2px #f8d989;
+}
+
+.grid{
+ height:100%;
+ display:grid;
+ grid-template-columns:repeat(3,1fr);
+ gap:3px;
+}
+
+.reel{
+ min-width:0;
+ display:grid;
+ grid-template-rows:repeat(3,1fr);
+ gap:3px;
+ border-right:2px solid #b98738;
+}
+
+.reel:last-child{border:0}
+
+.cell{
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ overflow:hidden;
+ background:linear-gradient(145deg,#f0d7b9,#d8b99d);
+ min-height:0;
+}
+
+.cell img{
+ width:100%;
+ height:100%;
+ object-fit:contain;
+ mix-blend-mode:multiply;
+}
+
+.cell.active{
+ outline:3px solid #ffe56c;
+ outline-offset:-3px;
+ filter:brightness(1.12);
+}
+
+/* MENSAGEM CORRIGIDA */
+
+.message{
+ position:absolute;
+ left:7%;
+ right:7%;
+ top:69.1%;
+ height:7.2%;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ text-align:center;
+
+ background:linear-gradient(
+  90deg,
+  #a20b20,
+  #d91c30,
+  #a20b20
+ );
+
+ border:3px solid #e8bd55;
+ border-radius:12px;
+
+ color:#b8f5c5;
+ font-weight:900;
+ font-style:italic;
+ font-size:clamp(14px,4vw,20px);
+ text-shadow:1px 2px 2px #681014;
+ padding:4px;
+ z-index:5;
+}
+
+/* PAINEL FINANCEIRO CORRIGIDO */
+
+.hud{
+ position:absolute;
+ left:0;
+ right:0;
+ top:79.3%;
+ height:7.2%;
+ display:grid;
+ grid-template-columns:repeat(3,1fr);
+ align-items:center;
+ text-align:center;
+ padding:0 4%;
+
+ background:#790910;
+ border-top:3px solid #d6a33c;
+ border-bottom:3px solid #d6a33c;
+ z-index:5;
+}
+
+.hud-item{
+ font-size:clamp(11px,3.4vw,15px);
+ font-weight:700;
+ text-shadow:0 1px 3px #000;
+ background:#59070c;
+ border-radius:8px;
+ padding:5px 2px;
+}
+
+.hud-item small{
+ display:block;
+ font-size:9px;
+ color:#ffd879;
+ margin-bottom:3px;
+}
+
+/* CONTROLES CORRIGIDOS */
+
+.bet-controls{
+ position:absolute;
+ left:5%;
+ right:5%;
+ top:86.1%;
+ height:13%;
+ display:flex;
+ align-items:center;
+ justify-content:space-around;
+
+ background:linear-gradient(
+  180deg,
+  #a71920,
+  #79070c
+ );
+
+ z-index:5;
+ border-radius:12px;
+}
+
+.circle{
+ border:0;
+ border-radius:50%;
+ background:#a91b1a;
+ color:#ffd65b;
+ font-size:26px;
+ width:12%;
+ aspect-ratio:1;
+ cursor:pointer;
+ box-shadow:0 2px 5px #380000;
+}
+
+.spin{
+ width:27%;
+ aspect-ratio:1;
+ border-radius:50%;
+ border:6px solid #d2a03c;
+ background:radial-gradient(
+  circle at 35% 25%,
+  #64f5a1,
+  #079454 65%,
+  #00552e
+ );
+ color:#fff4a5;
+ font-size:clamp(22px,7vw,34px);
+ font-weight:900;
+ box-shadow:0 0 12px #ffe36a;
+ cursor:pointer;
+}
+
+button:disabled{
+ opacity:.5;
+ cursor:not-allowed;
+}
+
+/* PAINEL EDUCATIVO */
+
+.education{
+ background:#4c0909;
+ border:1px solid #c3923c;
+ padding:14px;
+ margin-top:12px;
+ border-radius:9px;
+}
+
+.education h2{
+ font-size:17px;
+ color:#ffdc79;
+ margin:0 0 10px;
+}
+
+.education p{
+ font-size:13px;
+ line-height:1.55;
+ color:#f4dfca;
+ margin:7px 0;
+}
+
+.stats{
+ display:grid;
+ grid-template-columns:repeat(3,1fr);
+ gap:7px;
+ margin:10px 0;
+}
+
+.stat{
+ background:#781116;
+ border:1px solid #c3923c;
+ border-radius:6px;
+ padding:9px 4px;
+ text-align:center;
+}
+
+.stat small{
+ display:block;
+ font-size:10px;
+ color:#ffdb9a;
+}
+
+.stat strong{
+ display:block;
+ font-size:20px;
+ margin-top:4px;
+}
+
+.history{
+ max-height:145px;
+ overflow:auto;
+ font-size:12px;
+}
+
+.history div{
+ display:flex;
+ justify-content:space-between;
+ gap:8px;
+ padding:7px 2px;
+ border-bottom:1px solid #8c3b30;
+}
+
+.win{color:#7dffa5}
+.loss{color:#ffaaa0}
+
+.reset{
+ width:100%;
+ padding:10px;
+ background:#b17a24;
+ color:#fff;
+ border:1px solid #ffe18a;
+ border-radius:6px;
+ font-weight:bold;
+ margin-top:10px;
+ cursor:pointer;
+}
+
+@media(max-width:360px){
+ body{padding:7px}
+ .notice{font-size:10px}
+ .stage{width:100%}
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+ <div class="notice">
+ SIMULADOR EDUCATIVO • PONTOS FICTÍCIOS • SEM DINHEIRO REAL
+ </div>
+
+ <div class="stage">
+
+  <div class="reels-cover">
+   <div class="grid">
+    <div class="reel" id="reel0"></div>
+    <div class="reel" id="reel1"></div>
+    <div class="reel" id="reel2"></div>
+   </div>
+  </div>
+
+  <div class="message" id="message">
+   Boa sorte! Tigre da Sorte!
+  </div>
+
+  <div class="hud">
+
+   <div class="hud-item">
+    <small>SALDO FICTÍCIO</small>
+    <span id="balance">1.000</span>
+   </div>
+
+   <div class="hud-item">
+    <small>APOSTA</small>
+    <span id="betValue">10</span>
+   </div>
+
+   <div class="hud-item">
+    <small>PRÊMIO</small>
+    <span id="prize">0</span>
+   </div>
+
+  </div>
+
+  <div class="bet-controls">
+   <button class="circle" id="minus">−</button>
+   <button class="spin" id="spin">↻</button>
+   <button class="circle" id="plus">+</button>
+  </div>
+
+ </div>
+
+ <section class="education">
+
+  <h2>📊 Painel educativo</h2>
+
+  <div class="stats">
+   <div class="stat">
+    <small>JOGADAS</small>
+    <strong id="plays">0</strong>
+   </div>
+
+   <div class="stat">
+    <small>VITÓRIAS</small>
+    <strong id="wins">0</strong>
+   </div>
+
+   <div class="stat">
+    <small>DERROTAS</small>
+    <strong id="losses">0</strong>
+   </div>
+  </div>
+
+  <h2>Histórico de rodadas</h2>
+
+  <div class="history" id="history">
+   Nenhuma jogada realizada.
+  </div>
+
+  <p>
+   <b>Como funciona:</b> são sorteados três símbolos
+   independentes. Três símbolos iguais na linha central
+   geram pontos fictícios conforme o multiplicador definido.
+  </p>
+
+  <p>
+   <b>Educação financeira:</b> uma vitória não garante lucro.
+   Perdas anteriores não tornam uma vitória futura mais provável.
+  </p>
+
+  <p>
+   <b>Modelo demonstrativo:</b> cinco símbolos equiprováveis
+   por rolo; chance de três iguais = 5/125 = 4%.
+   Os multiplicadores resultam em retorno teórico de 46,4%
+   e vantagem matemática de 53,6%.
+  </p>
+
+  <button class="reset" id="reset">
+   REINICIAR SIMULAÇÃO
+  </button>
+
+ </section>
+
+</div>
+
+<script>
+
+// SÍMBOLOS
+
+const symbols=[
+ {name:"Fogos",src:"assets/fogos.jpg",multiplier:20},
+ {name:"Pote",src:"assets/pote.jpg",multiplier:15},
+ {name:"Laranja",src:"assets/laranja1.jpg",multiplier:5},
+ {name:"Amuleto",src:"assets/amuleto.jpg",multiplier:10},
+ {name:"Laranja",src:"assets/laranja2.jpg",multiplier:5}
+];
+
+const bets=[10,25,50,100];
+
+let balance=1000;
+let betIndex=0;
+let totalBet=0;
+let totalReturn=0;
+let plays=0;
+let wins=0;
+let losses=0;
+let spinning=false;
+let lastPrize=0;
+
+const reels=[0,1,2].map(i=>
+ document.getElementById("reel"+i)
+);
+
+const $=id=>document.getElementById(id);
+
+const fmt=n=>n.toLocaleString("pt-BR");
+
+function randomSymbol(){
+ return symbols[
+  Math.floor(Math.random()*symbols.length)
+ ];
+}
+
+function render(reel,items,highlight=false){
+
+ reel.innerHTML="";
+
+ items.forEach((item,i)=>{
+
+  const cell=document.createElement("div");
+
+  cell.className="cell";
+
+  if(highlight&&i===1){
+   cell.classList.add("active");
+  }
+
+  const img=document.createElement("img");
+
+  img.src=item.src;
+  img.alt=item.name;
+
+  cell.appendChild(img);
+  reel.appendChild(cell);
+
+ });
+}
+
+function update(){
+
+ $("balance").textContent=fmt(balance);
+ $("betValue").textContent=fmt(bets[betIndex]);
+ $("prize").textContent=fmt(lastPrize);
+
+ $("plays").textContent=plays;
+ $("wins").textContent=wins;
+ $("losses").textContent=losses;
+
+ $("minus").disabled=spinning||betIndex===0;
+ $("plus").disabled=spinning||betIndex===bets.length-1;
+}
+
+function randomColumn(){
+ return [
+  randomSymbol(),
+  randomSymbol(),
+  randomSymbol()
+ ];
+}
+
+function changeBet(delta){
+
+ if(spinning)return;
+
+ betIndex=Math.max(
+  0,
+  Math.min(bets.length-1,betIndex+delta)
+ );
+
+ update();
+}
+
+$("minus").onclick=()=>changeBet(-1);
+$("plus").onclick=()=>changeBet(1);
+
+// GIRAR
+
+$("spin").onclick=()=>{
+
+ if(spinning)return;
+
+ const bet=bets[betIndex];
+
+ if(balance<bet){
+
+  $("message").textContent=
+   "Saldo fictício insuficiente. Reinicie a simulação.";
+
+  return;
+ }
+
+ spinning=true;
+ $("spin").disabled=true;
+
+ balance-=bet;
+ totalBet+=bet;
+ plays++;
+ lastPrize=0;
+
+ $("message").textContent="Girando os rolos...";
+
+ const result=[
+  randomColumn(),
+  randomColumn(),
+  randomColumn()
+ ];
+
+ let ticks=0;
+
+ const animation=setInterval(()=>{
+
+  reels.forEach(reel=>{
+   render(reel,randomColumn());
+  });
+
+  ticks++;
+
+  if(ticks>=10){
+
+   clearInterval(animation);
+
+   reels.forEach((reel,i)=>{
+    render(reel,result[i]);
+   });
+
+   const line=result.map(col=>col[1]);
+
+   const won=line.every(
+    s=>s.name===line[0].name
+   );
+
+   let prize=0;
+
+   if(won){
+
+    prize=bet*line[0].multiplier;
+
+    balance+=prize;
+    totalReturn+=prize;
+    wins++;
+    lastPrize=prize;
+
+    $("message").textContent=
+     "GANHO FICTÍCIO: "+fmt(prize)+" PONTOS!";
+
+   }else{
+
+    losses++;
+
+    $("message").textContent=
+     "Não houve combinação premiada.";
+
+   }
+
+   // HISTÓRICO
+
+   const row=document.createElement("div");
+
+   const left=document.createElement("span");
+
+   left.textContent=
+    "Rodada "+plays+": "+
+    line.map(s=>s.name).join(" / ");
+
+   const right=document.createElement("strong");
+
+   right.textContent=won
+    ? "+"+fmt(prize)
+    : "-"+fmt(bet);
+
+   right.className=won?"win":"loss";
+
+   row.append(left,right);
+
+   if(plays===1){
+    $("history").innerHTML="";
+   }
+
+   $("history").prepend(row);
+
+   // FINALIZA
+
+   spinning=false;
+   $("spin").disabled=false;
+
+   update();
+
+   if(balance<10){
+
+    $("message").textContent=
+     "Saldo insuficiente para outra rodada. Reinicie.";
+
+   }
+
+  }
+
+ },95);
+
+ update();
+
+};
+
+// REINICIAR
+
+$("reset").onclick=()=>{
+
+ if(spinning)return;
+
+ balance=1000;
+ betIndex=0;
+ totalBet=0;
+ totalReturn=0;
+ plays=0;
+ wins=0;
+ losses=0;
+ lastPrize=0;
+
+ $("history").textContent=
+  "Nenhuma jogada realizada.";
+
+ $("message").textContent=
+  "Boa sorte! Tigre da Sorte!";
+
+ const initial=[
+
+  [symbols[0],symbols[2],symbols[3]],
+
+  [symbols[1],symbols[3],symbols[2]],
+
+  [symbols[2],symbols[2],symbols[2]]
+
+ ];
+
+ reels.forEach((r,i)=>{
+  render(r,initial[i]);
+ });
+
+ $("spin").disabled=false;
+
+ update();
+
+};
+
+// INICIALIZAÇÃO
+
+const initial=[
+
+ [symbols[0],symbols[2],symbols[3]],
+
+ [symbols[1],symbols[3],symbols[2]],
+
+ [symbols[2],symbols[2],symbols[2]]
+
+];
+
+reels.forEach((r,i)=>{
+ render(r,initial[i]);
+});
+
+update();
+
+</script>
+
+</body>
+</html>
